@@ -1,0 +1,14 @@
+{
+  "name": "ff-carlsfeld-lagerverwaltung",
+  "version": "4.0.0",
+  "private": true,
+  "engines": {"node": ">=20 <25"},
+  "scripts": {"start": "node server.js"},
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "connect-pg-simple": "^10.0.0",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "pg": "^8.13.1"
+  }
+}
