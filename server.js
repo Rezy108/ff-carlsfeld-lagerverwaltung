@@ -86,7 +86,17 @@ app.get('/api/users',auth,roles('Admin'),async(req,res,next)=>{try{res.json({use
 app.post('/api/users',auth,roles('Admin'),async(req,res)=>{let {username,name,password,role}=req.body||{};username=String(username||'').trim().toLowerCase();if(!/^[a-z0-9._-]{3,32}$/.test(username)||String(password||'').length<8||!['Admin','Gerätewart','Mitglied'].includes(role))return res.status(400).json({error:'Eingaben prüfen (Passwort mindestens 8 Zeichen)'});try{await pool.query('INSERT INTO users(username,display_name,password_hash,role) VALUES($1,$2,$3,$4)',[username,String(name||username).trim(),await bcrypt.hash(password,12),role]);res.json({ok:true})}catch(e){res.status(400).json({error:'Benutzername existiert bereits'})}});
 app.put('/api/users/:id',auth,roles('Admin'),async(req,res)=>{let {name,role,active,password}=req.body||{};if(!['Admin','Gerätewart','Mitglied'].includes(role))return res.status(400).json({error:'Ungültige Rolle'});await pool.query('UPDATE users SET display_name=$1,role=$2,active=$3 WHERE id=$4',[name,role,!!active,req.params.id]);if(password){if(password.length<8)return res.status(400).json({error:'Passwort mindestens 8 Zeichen'});await pool.query('UPDATE users SET password_hash=$1 WHERE id=$2',[await bcrypt.hash(password,12),req.params.id])}res.json({ok:true})});
 
-app.use(express.static(path.join(__dirname,'public')));
+// Frontend ausliefern. Die explizite /-Route verhindert auf Render ein "Cannot GET /".
+const publicDir = path.join(__dirname, 'public');
+app.use(express.static(publicDir));
+app.get('/', (req, res) => res.sendFile(path.join(publicDir, 'index.html')));
+
+// Frontend-Fallback fuer normale Browser-Aufrufe (API-Routen bleiben davon unberuehrt).
+app.get('/{*splat}', (req, res, next) => {
+  if (req.path.startsWith('/api/')) return next();
+  res.sendFile(path.join(publicDir, 'index.html'));
+});
+
 app.use((err,req,res,next)=>{console.error(err);res.status(500).json({error:'Interner Serverfehler'})});
 
 initDb().then(()=>app.listen(PORT,'0.0.0.0',()=>console.log(`FF Carlsfeld Lagerverwaltung läuft auf Port ${PORT}`))).catch(err=>{console.error(err);process.exit(1)});
