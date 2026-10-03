@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: ff-carlsfeld-lager
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ff-carlsfeld-db
+          property: connectionString
+      - key: INITIAL_ADMIN_USER
+        value: admin
+      - key: INITIAL_ADMIN_PASSWORD
+        sync: false
+
+databases:
+  - name: ff-carlsfeld-db
+    plan: free
+    databaseName: ff_carlsfeld
+    user: ff_carlsfeld
